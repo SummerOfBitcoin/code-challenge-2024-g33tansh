@@ -6,7 +6,8 @@ import time
 
 def double_sha256(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
-
+def hash256(data):
+    return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 def merkle_root(txids):
     txids = list(txids)
@@ -39,27 +40,29 @@ def compact_size(value):
         return b'\xff' + value.to_bytes(8, 'little')
 
 def hash_txid(json_data):
-    tx_data = json.loads(json_data) 
-    inputs = ""
-    inputs += struct.pack("<I", tx_data["version"]).hex()
-    inputs += compact_size(len(tx_data["vin"])).hex()
+
+    txid = ""
+    tx_data = json.loads(json_data)
+    txid += struct.pack('<I', tx_data['version']).hex()
+    txid += compact_size(len(tx_data['vin'])).hex()
+
+    for vin in tx_data['vin']:
+        txid += ''.join(reversed([vin['txid'][i:i+2] for i in range(0, len(vin['txid']), 2)]))
+        txid += struct.pack('<I', vin['vout']).hex()
+        txid += compact_size(len(vin['scriptsig'])//2).hex()
+        txid += vin['scriptsig']
+        txid += struct.pack('<I', vin['sequence']).hex()
+        
+    txid += compact_size(len(tx_data['vout'])).hex()
     
-    for v_input in tx_data["vin"]: 
-            inputs += ''.join(reversed([v_input['txid'][i:i+2] for i in range(0, len((v_input['txid'])), 2)]))
-            inputs += struct.pack("<I", v_input["vout"]).hex()
-            inputs += compact_size(len(v_input["scriptsig"])//2).hex() 
-            inputs += v_input["scriptsig"]
-            inputs += struct.pack("<I", v_input["sequence"]).hex()
-    inputs += compact_size(len(tx_data["vout"])).hex()
-    for output in tx_data["vout"]:
-        inputs += struct.pack("<Q", int(output["value"])).hex()
-        scriptpubkey = output["scriptpubkey"]
-        inputs += compact_size(len(scriptpubkey)//2).hex()
-        inputs += output["scriptpubkey"]
-    locktime = struct.pack("<I", tx_data["locktime"]).hex()
-    serialized_tx = inputs  + locktime
-    cod = hashlib.sha256(hashlib.sha256(bytes.fromhex(serialized_tx)).digest()).digest()
-    return cod[::-1].hex()
+    for vout in tx_data['vout']:
+        txid += struct.pack('<Q', vout['value']).hex()
+        txid += compact_size(len(vout['scriptpubkey'])//2).hex()
+        txid += vout['scriptpubkey']
+    txid += struct.pack('<I', int(tx_data['locktime'])).hex()
+    txid_hash = hash256(bytes.fromhex(txid))
+    return txid_hash[::-1].hex()
+
 
 
 def json_parse(folder):
