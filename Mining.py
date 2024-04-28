@@ -102,7 +102,7 @@ def blockheader(txidlst):
 
 def coinbase(txids):
     witness_hash = bytes.fromhex(merkle_root(txids))
-    witness_hash = witness_hash[::-1].hex()
+    witness_hash = witness_hash.hex()
     coinbase = ""
     coinbase += "01000000" #Version
     coinbase += "00" #Marker
