@@ -59,7 +59,6 @@ def hash_txid(json_data):
     locktime = struct.pack("<I", tx_data["locktime"]).hex()
     serialized_tx = inputs  + locktime
     cod = hashlib.sha256(hashlib.sha256(bytes.fromhex(serialized_tx)).digest()).digest()
-
     return cod[::-1].hex()
 
 
@@ -102,7 +101,7 @@ def blockheader(txidlst):
 
 def coinbase(txids):
     witness_hash = bytes.fromhex(merkle_root(txids))
-    witness_hash = witness_hash.hex()
+    witness_hashR = witness_hash[::-1].hex()
     coinbase = ""
     coinbase += "01000000" #Version
     coinbase += "00" #Marker
@@ -114,7 +113,7 @@ def coinbase(txids):
     coinbase += "03000000184d696e656420627920416e74506f6f6c373946205b8160a4"
     coinbase += "ffffffff"
     coinbase += "02"
-    witkit = witness_hash + "0000000000000000000000000000000000000000000000000000000000000000" 
+    witkit = witness_hashR + "0000000000000000000000000000000000000000000000000000000000000000" 
     commit = double_sha256(bytes.fromhex(witkit)).hex()
     coinbase += "f595814a00000000" + "19" + "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
     coinbase += "0000000000000000" + "26" + f"6a24aa21a9ed{commit}" 
