@@ -89,9 +89,9 @@ def blockheader(txidlst):
     target_hexstr = '%064x' % (mant * (1<<(8*(exp - 3))))
     target_str = bytes.fromhex(target_hexstr)
     nonce = 0
-
+    # header = bytes.fromhex(ver)
     while nonce < 0x100000000:
-        bytes.fromhex(ver) + bytes.fromhex(prevblock)[::-1] +\
+        header = bytes.fromhex(ver) + bytes.fromhex(prevblock)[::-1] +\
             bytes.fromhex(merkleroot)[::-1] + struct.pack("<LLL", int(hex(int(time.time())),16), target_bits, nonce)
         hash = hashlib.sha256(hashlib.sha256(header).digest()).digest()
         # print(nonce, (hash[::-1]).hex())
@@ -110,7 +110,7 @@ def coinbase(txids):
     coinbase += "01" #Input Count
     coinbase += (b'\x00'*32).hex() #TXID
     coinbase += "ffffffff" #VOUT
-    coinbase += "25"
+    coinbase += "1d"
     coinbase += "03000000184d696e656420627920416e74506f6f6c373946205b8160a4"
     coinbase += "ffffffff"
     coinbase += "02"
