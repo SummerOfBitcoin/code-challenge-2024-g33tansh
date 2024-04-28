@@ -103,21 +103,21 @@ def blockheader(txidlst):
 
 
 def coinbase(txids):
-    witness_root = bytes.fromhex(merkle_root(txids))
-    witness_hash = hashlib.sha256(hashlib.sha256(witness_root).digest()).digest()[::-1].hex()
+    witness_root = merkle_root(txids)
+    witness_hash = hashlib.sha256(hashlib.sha256(bytes.fromhex(witness_root)).digest()).digest()[::-1].hex()
     coinbase = ""
-    coinbase += "01000000" #Version
-    coinbase += "00" #Marker
-    coinbase += "01" #Flag
-    coinbase += "01" #Input Count
-    coinbase += (b'\x00'*32).hex() #TXID
-    coinbase += "ffffffff" #VOUT
+    coinbase += "01000000" # Version
+    coinbase += "00" # Marker
+    coinbase += "01" # Flag
+    coinbase += "01" # Input Count
+    coinbase += (b'\x00'*32).hex() # TXID
+    coinbase += "ffffffff" # VOUT
     coinbase += "1d"
     coinbase += "03000000184d696e656420627920416e74506f6f6c373946205b8160a4"
     coinbase += "ffffffff"
     coinbase += "02"
     witkit = witness_hash + "0000000000000000000000000000000000000000000000000000000000000000" 
-    commit = double_sha256(bytes.fromhex(witkit)).hex()
+    commit = hashlib.sha256(hashlib.sha256(bytes.fromhex(witkit)).digest()).digest()[::-1].hex()
     coinbase += "f595814a00000000" + "19" + "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
     coinbase += "0000000000000000" + "26" + f"6a24aa21a9ed{commit}" 
     coinbase += "01" + "20" + "0000000000000000000000000000000000000000000000000000000000000000"
