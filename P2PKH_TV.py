@@ -129,11 +129,13 @@ def validate_transaction(combined_script, tx_data, index):
 
 def p2pkh_verifier(folder, dest_folder):
     files = os.listdir(folder)
+    os.makedirs(dest_folder, exist_ok=True)
     for file in files:
         f = open(os.path.join(folder, file))
         data = json.load(f)
         if valid_p2pkh(data):
-            shutil.copy(os.path.join(folder, file), os.path.join(dest_folder, file))
+            # print(file)
+            shutil.copyfile(os.path.join(folder, file), os.path.join(dest_folder, file))
         else:
             print(f"{file} is invalid")
 

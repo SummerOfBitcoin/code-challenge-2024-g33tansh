@@ -4,12 +4,15 @@ from P2PKH_TV import p2pkh_verifier
 
 
 
-filter_tx("mempool/", "unverified_p2pkh/")
-p2pkh_verifier("unverified_p2pkh/", "p2pkh/")
+filter_tx("./mempool", "./uv_p2pkh")
+print("Filter complete")
+p2pkh_verifier("./uv_p2pkh/", "./p2pkh")
+print("Verification done")
 
 
 txidlist = json_parse("p2pkh/")
 blockhead = blockheader(txidlist)
+print(blockhead)
 coinbas = coinbase(txidlist)
 
 

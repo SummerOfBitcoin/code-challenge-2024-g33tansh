@@ -21,4 +21,3 @@ def filter_tx(in_folder, out_folder):
                 if all_p2pkh:
                     # Copy the transaction to the p2pkh folder
                     copyfile(in_file_path, out_file_path)
-

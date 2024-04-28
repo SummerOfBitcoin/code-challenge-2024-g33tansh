@@ -128,6 +128,8 @@ def create_output(blockheader, coinbase, txidlist):
     with open('output.txt', 'a') as file:
         file.write(blockheader)
         file.write("\n"+coinbase)
+        empty = (b'\x00'*32).hex()
+        file.write(f"\n{empty}")
         for txid in txidlist:
             file.write("\n"+txid)
         
