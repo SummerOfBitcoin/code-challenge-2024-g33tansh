@@ -65,7 +65,7 @@ def hash_txid(json_data):
 
 
 
-def json_parse(folder):
+def txidlist_calc(folder):
     # Get all JSON files from the folder
     json_files = [f for f in os.listdir(folder) if f.endswith('.json')]
 
@@ -101,11 +101,71 @@ def blockheader(txidlst):
             return header.hex()
         nonce += 1
 
+def txid_p2wpkh(json_data):
+    tx_data = json.loads(json_data)
 
-def coinbase(txids):
-    txids = ["0000000000000000000000000000000000000000000000000000000000000000"] + txids
-    witness_root = bytes.fromhex(merkle_root(txids)) 
-    witness_hash = witness_root[::-1].hex()
+    txid = ""
+    txid += struct.pack('<I', tx_data['version']).hex()
+    txid += "00"
+    txid += "01"
+    txid += "01"
+    for vin in tx_data['vin']:
+        txid += ''.join(reversed([vin['txid'][i:i+2] for i in range(0, len(vin['txid']), 2)]))
+        txid += struct.pack('<I', vin['vout']).hex()
+        txid += compact_size(len(vin['scriptsig'])//2).hex()
+        txid += struct.pack('<I', vin['sequence']).hex()     
+    txid += compact_size(len(tx_data['vout'])).hex()
+    
+    for vout in tx_data['vout']:
+        txid += struct.pack('<Q', vout['value']).hex()
+        txid += compact_size(len(vout['scriptpubkey'])//2).hex()
+        txid += vout['scriptpubkey']
+    witness = tx_data["vin"][0]["witness"]
+    signature = witness[0]
+    pubkey = witness[1]
+    txid += signature + pubkey
+    txid += struct.pack('<I', int(tx_data['locktime'])).hex()
+    txid_hash = hash256(bytes.fromhex(txid))
+    return txid_hash[::-1].hex()
+
+
+
+def wtxid_p2wpkh(json_data): 
+    tx_data = json.loads(json_data)
+    wtx = ""
+    wtx += struct.pack('<I', tx_data['version']).hex()
+    wtx += "00"
+    wtx += "01"
+    wtx += "01"
+    for vin in tx_data['vin']:
+        wtx += ''.join(reversed([vin['txid'][i:i+2] for i in range(0, len(vin['txid']), 2)]))
+        wtx += struct.pack('<I', vin['vout']).hex()
+        wtx += compact_size(len(vin['scriptsig'])//2).hex()
+        wtx += struct.pack('<I', vin['sequence']).hex()     
+    wtx += compact_size(len(tx_data['vout'])).hex()
+    for vout in tx_data['vout']:
+        wtx += struct.pack('<Q', vout['value']).hex()
+        wtx += compact_size(len(vout['scriptpubkey'])//2).hex()
+        wtx += vout['scriptpubkey'] 
+    witness = tx_data["vin"][0]["witness"]
+    signature = witness[0]
+    pubkey = witness[1]
+    wtx += "02"
+    wtx += compact_size(len(signature)//2).hex()
+    wtx += signature
+    wtx += compact_size(len(pubkey)//2).hex()
+    wtx += pubkey
+    wtx += struct.pack('<I', int(tx_data['locktime'])).hex()
+    wtx_hash = hash256(bytes.fromhex(wtx))
+    return wtx_hash[::-1].hex()
+
+
+
+
+def coin_base(folder):
+    witness_lists = wtxid_list(folder)
+    witness_hash = merkle_root(witness_lists)
+    witness_hash = witness_hash[::-1].hex()
     coinbase = ""
     coinbase += "01000000" # Version
     coinbase += "00" # Marker
@@ -139,3 +199,15 @@ def create_output(blockheader, coinbase, txidlist):
         
 
 
+def wtxid_list(folder):
+    wtxid = ["0000000000000000000000000000000000000000000000000000000000000000"] 
+    files = os.listdir(folder)
+    for file in files:
+        filedata = open(folder + "/" + file)
+        data = json.load(filedata)
+        data_v = data["vin"][0]["prevout"]["scriptpubkey_type"]
+        if data_v == "v0_p2wpkh":
+            wtxid.append(wtxid_p2wpkh(json.dumps(data)))
+        else: 
+            wtxid.append(hash_txid(json.dumps(data)))
+    return wtxid
