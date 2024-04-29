@@ -7,7 +7,6 @@ import json
 import os
 import shutil
 from ecdsa import BadSignatureError
-from mine import double_sha256
 
 def tokenize(script):
     return script.split(" ")
@@ -63,15 +62,13 @@ def message_construction(json_data, index):
 
 def checksig(pubkey, signature, message):
     try:
-        public_key_bytes = bytes.fromhex(pubkey)
-        signature_bytes = bytes.fromhex(signature[:-2])
-        message_bytes = bytes.fromhex(message.hex())
+        CSpubkey = bytes.fromhex(pubkey)
+        CSsignature = bytes.fromhex(signature[:-2])
+        CSmessage = bytes.fromhex(message.hex())
         
-        verik = ecdsa.VerifyingKey.from_string(public_key_bytes, curve=ecdsa.SECP256k1)
-
-        # Verify the signature
-        is_ok = verik.verify_digest(signature_bytes, message_bytes, sigdecode=ecdsa.util.sigdecode_der)
-        return is_ok
+        verik = ecdsa.VerifyingKey.from_string(CSpubkey, curve=ecdsa.SECP256k1)
+        isok = verik.verify_digest(CSsignature, CSmessage, sigdecode=ecdsa.util.sigdecode_der)
+        return isok
     except BadSignatureError:
         return False
 
@@ -127,11 +124,11 @@ def p2pkh_verifier(folder, dest_folder):
             print(f"{file} is invalid")
 
 def valid_p2pkh(tx_data):
-    ans = False
+    skript = False
     for i, vin in enumerate(tx_data["vin"]):
         pubkeyasm = vin["prevout"]["scriptpubkey_asm"]
         scriptsigasm = vin["scriptsig_asm"]
         final = scriptsigasm + " " + pubkeyasm
-        ans = validate_transaction(final, json.dumps(tx_data), i)
-    return ans
+        skript = validate_transaction(final, json.dumps(tx_data), i)
+    return skript
 

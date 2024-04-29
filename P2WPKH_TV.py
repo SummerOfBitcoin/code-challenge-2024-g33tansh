@@ -19,7 +19,7 @@ def hash160(data):
     ripemd_hash = RIPEMD160.new(sha256_hash).digest()
     return ripemd_hash.hex()
 
-def compact_size(value):
+def compact(value):
     if value < 0xfd:
         return bytes([value])
     elif value <= 0xffff:
@@ -53,7 +53,7 @@ def message_construction(json_data, index):
         output = ""
     for v_out in tx_data["vout"]:
         scriptpubkey = v_out["scriptpubkey"]
-        pubkeylen = compact_size(len(scriptpubkey)//2).hex()
+        pubkeylen = compact(len(scriptpubkey)//2).hex()
         output += struct.pack("<Q", int(v_out["value"])).hex()
         output += pubkeylen
         output += scriptpubkey
@@ -70,13 +70,13 @@ def message_construction(json_data, index):
 
 def checksig(pubkey, signature, message):
     try:
-        public_key_bytes = bytes.fromhex(pubkey)
-        signature_bytes = bytes.fromhex(signature[:-2])
-        message_bytes = bytes.fromhex(message.hex())
+        CSpubkey = bytes.fromhex(pubkey)
+        CSsignature = bytes.fromhex(signature[:-2])
+        CSmessage = bytes.fromhex(message.hex())
 
-        verik = ecdsa.VerifyingKey.from_string(public_key_bytes, curve=ecdsa.SECP256k1)
-        is_ok = verik.verify_digest(signature_bytes, message_bytes, sigdecode=ecdsa.util.sigdecode_der)
-        return is_ok
+        verik = ecdsa.VerifyingKey.from_string(CSpubkey, curve=ecdsa.SECP256k1)
+        isok = verik.verify_digest(CSsignature, CSmessage, sigdecode=ecdsa.util.sigdecode_der)
+        return isok
     except BadSignatureError:
         return False
 
@@ -135,12 +135,12 @@ def p2wpkh_verifier(folder, dest_folder):
             print(f"{file} is invalid")
 
 def valid_p2wpkh(tx_data):
-    ans = False
+    skript = False
     for i, vin in enumerate(tx_data["vin"]):
         pubkeyasm = vin["prevout"]["scriptpubkey_asm"].split(" ")[-1]             
         signature = vin['witness'][0]
         public_key = vin['witness'][1]
         script = "OP_PUSHBYTES_72" + " " + signature + " " +  "OP_PUSHBYTES_33" + " " + public_key + " " + "OP_DUP" + " " + "OP_HASH160" + " " + "OP_PUSHBYTES_20" + " " + pubkeyasm + " " + "OP_EQUALVERIFY" + " " + "OP_CHECKSIG"
-        ans = validate_transaction(script, json.dumps(tx_data), i)
-    return ans
+        skript = validate_transaction(script, json.dumps(tx_data), i)
+    return skript
 

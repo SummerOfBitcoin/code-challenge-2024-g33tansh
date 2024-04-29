@@ -153,7 +153,7 @@ def wtxid_p2wpkh(json_data):
 
 
 
-def coin_base(folder):
+def koinbase(folder):
     witness_lists = wtxid_list(folder)
     witness_hash = bytes.fromhex(merkle_root(witness_lists))
     witness_hash = witness_hash[::-1].hex()
@@ -179,7 +179,7 @@ def coin_base(folder):
     return coinbase
 
     
-def create_output(blockheader, coinbase, txidlist):
+def make_output(blockheader, coinbase, txidlist):
     with open('output.txt', 'a') as file:
         file.write(blockheader)
         file.write("\n"+coinbase)
