@@ -23,12 +23,16 @@ def merkle(txids):
     if len(txids) % 2 == 1:
         txids.append(txids[-1])
 
-    #Hash pairs of txids iteratively to calculate the Merkle root
+    # Hash pairs of txids iteratively to calculate the Merkle root
     hashes = [HASH256(bytes.fromhex(txid)) for txid in txids]
     while len(hashes) > 1:
-        hashes = [HASH256(hashes[i] + hashes[i + 1]) for i in range(0, len(hashes), 2)]
-
-    return hashes[0].hex()
+        new_hashes = []
+    for i in range(0, len(hashes), 2):
+        if i + 1 < len(hashes):  # Ensure index is within range
+            new_hashes.append(HASH256(hashes[i] + hashes[i + 1]))
+        else:  # If odd number of hashes, duplicate the last one
+            new_hashes.append(HASH256(hashes[i] + hashes[i]))
+    hashes = new_hashes
 
 
 #Encoding integer values into Compact representation..
