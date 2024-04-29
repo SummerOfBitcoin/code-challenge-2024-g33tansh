@@ -1,5 +1,5 @@
 from mine import txidlist_calc, blockheader, coin_base, create_output, wtxid_list
-from filter import filp2pkh, filp2wpkh
+from libfilter import filp2pkh, filp2wpkh
 from P2PKH_TV import p2pkh_verifier
 from P2WPKH_TV import p2wpkh_verifier
 
