@@ -1,4 +1,4 @@
-from mine import txidlist_calc, blockheader, koinbase, create_output, wtxid_list
+from mine import txidlist_calc, blockheader, koinbase, make_output
 from libfilter import filp2pkh, filp2wpkh
 from P2PKH_TV import p2pkh_verifier
 from P2WPKH_TV import p2wpkh_verifier
@@ -18,7 +18,7 @@ coinbe = koinbase("./ver")
 blockz = blockheader(txid_list)
 
 #Creating output.txt
-create_output(blockz, coinbe, txid_list)
+make_output(blockz, coinbe, txid_list)
 
 
 
