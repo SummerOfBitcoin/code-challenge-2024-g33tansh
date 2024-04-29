@@ -103,22 +103,28 @@ def blockheader(txidlst):
 
 
 def coinbase(txids):
+    witness_root = merkle_root(txids)
+    witness_hash = witness_root[::-1].hex()
     coinbase = ""
     coinbase += "01000000" # Version
+    coinbase += "00" # Marker
+    coinbase += "01" # Flag
     coinbase += "01" # Input Count
     coinbase += (b'\x00'*32).hex() # TXID
     coinbase += "ffffffff" # VOUT
-    coinbase += "1d" # ScriptSig length
-    coinbase += "03000000184d696e656420627920416e74506f6f6c373946205b8160a4" # ScriptSig
-    coinbase += "ffffffff" # Sequence
-    coinbase += "01" # Output Count
-    coinbase += "f595814a00000000" # Value
-    coinbase += "19" # PkScript length
-    coinbase += "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac" # PkScript
-    coinbase += "00000000" # Locktime
+    coinbase += "1d"
+    coinbase += "03000000184d696e656420627920416e74506f6f6c373946205b8160a4"
+    coinbase += "ffffffff"
+    coinbase += "02"
+    witkit = witness_hash + "0000000000000000000000000000000000000000000000000000000000000000" 
+    witness_commitment = hash256(bytes.fromhex(witkit)).hex()
+
+    coinbase += "f595814a00000000" + "19" + "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
+    coinbase += "0000000000000000" + "26" + f"6a24aa21a9ed{witness_commitment}" 
+    coinbase += "01" + "20" + "0000000000000000000000000000000000000000000000000000000000000000"
+    coinbase += "00000000"
 
     return coinbase
-
 
     
 def create_output(blockheader, coinbase, txidlist):
