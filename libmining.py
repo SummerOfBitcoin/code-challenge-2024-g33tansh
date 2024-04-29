@@ -164,7 +164,7 @@ def wtxid_p2wpkh(json_data):
 
 def coin_base(folder):
     witness_lists = wtxid_list(folder)
-    witness_hash = merkle_root(witness_lists)
+    witness_hash = bytes.fromhex(merkle_root(witness_lists))
     witness_hash = witness_hash[::-1].hex()
     coinbase = ""
     coinbase += "01000000" # Version
