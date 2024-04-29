@@ -19,18 +19,18 @@ def merkle(txids):
     txids = list(txids)
     if len(txids) == 1:
         return txids[0]
-    merk = []
+    newtxids = []
     for i in range(0, len(txids)-1, 2):
-        merk.append(concat(txids[i], txids[i+1]))
-    if len(txids) % 2 == 1:
-        merk.append(concat(txids[-1], txids[-1]))
-    return merkle(merk)
+        newtxids.append(hash2(txids[i], txids[i+1]))
+    if len(txids) % 2 == 1: # odd, hash last item twice
+        newtxids.append(hash2(txids[-1], txids[-1]))
+    return merkle(newtxids)
 
-def concat(x, y):
-    A = bytes.fromhex(x)[::-1]
-    B = bytes.fromhex(y)[::-1]
-    H = HASH256(A+B)
-    return H[::-1].hex()
+def hash2(a, b):
+    a1 = bytes.fromhex(a)[::-1]
+    b1 = bytes.fromhex(b)[::-1]
+    h = hashlib.sha256(hashlib.sha256(a1+b1).digest()).digest()
+    return h[::-1].hex()
 
 #Encoding integer values into Compact representation..
 def encode_compact(value):
