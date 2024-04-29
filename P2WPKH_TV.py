@@ -108,8 +108,8 @@ def validate_transaction(skript, tx_data, index):
         elif token == "OP_CHECKSIG":
             pubkey = stack.pop()
             signature = stack.pop()
-            message = message(tx_data, index)
-            return checksig(pubkey, signature, message)
+            mess = message(tx_data, index)
+            return checksig(pubkey, signature, mess)
             
         i += 1
      
