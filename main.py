@@ -1,5 +1,5 @@
 #Importing required Libraries and functions...
-from mine import CalTxidList, blockheader, koinbase, make_output
+from mine import txidlist_calc, blockheader, coin_base, create_output
 from filtering import filp2pkh, filp2wpkh
 from P2PKH_TV import p2pkh_verifier
 from P2WPKH_TV import p2wpkh_verifier
@@ -13,12 +13,12 @@ p2pkh_verifier("./p2pkh", "./ver")
 p2wpkh_verifier("./p2wpkh", "./ver")
 
 #Mining process
-txList = CalTxidList("./ver")
-coinbe = koinbase("./ver")
+txList = txidlist_calc("./ver")
+coinbe = coin_base("./ver")
 blockz = blockheader(txList)
 
 #Creating output.txt for Autograder..
-make_output(blockz, coinbe, txList)
+create_output(blockz, coinbe, txList)
 
 
 
