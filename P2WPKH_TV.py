@@ -77,8 +77,8 @@ def checksig(pubkey, signature, message):
         bytes_pubkey = bytes.fromhex(pubkey)
         bytes_signature = bytes.fromhex(signature[:-2]) #Removing last two bytes to suit DER Format
         bytes_message = bytes.fromhex(message.hex())
-        with ecdsa.VerifyingKey.from_string(bytes_pubkey, curve=ecdsa.SECP256k1) as VF:
-            XVF = VF.verify_digest(bytes_signature, bytes_message, sigdecode=ecdsa.util.sigdecode_der)
+        VF = ecdsa.VerifyingKey.from_string(bytes_pubkey, curve=ecdsa.SECP256k1)
+        XVF = VF.verify_digest(bytes_signature, bytes_message, sigdecode=ecdsa.util.sigdecode_der)
         return XVF
     except BadSignatureError:
         return False
