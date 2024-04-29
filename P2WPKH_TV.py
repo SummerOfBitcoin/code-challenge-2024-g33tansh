@@ -164,7 +164,3 @@ def valid_p2wpkh(tx_data):
         ans = validate_transaction(script, json.dumps(tx_data), i)
     return ans
 
-
-in_folder = "./p2wpkh"
-dest_folder = "./verified"
-p2wpkh_verifier(in_folder, dest_folder)
