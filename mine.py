@@ -14,22 +14,19 @@ def merkle_root(txids):
     if len(txids) == 1:
         return txids[0]
     newtxids = []
-    # Process pairs. For odd length, the last is skipped
     for i in range(0, len(txids)-1, 2):
         newtxids.append(hash2(txids[i], txids[i+1]))
-    if len(txids) % 2 == 1: # odd, hash last item twice
+    if len(txids) % 2 == 1: 
         newtxids.append(hash2(txids[-1], txids[-1]))
     return merkle_root(newtxids)
 
 def hash2(a, b):
-    # Reverse inputs before and after hashing
     a1 = bytes.fromhex(a)[::-1]
     b1 = bytes.fromhex(b)[::-1]
     h = hashlib.sha256(hashlib.sha256(a1+b1).digest()).digest()
     return h[::-1].hex()
 
-
-def compact_size(value):
+def compact(value):
     if value < 0xfd:
         return bytes([value])
     elif value <= 0xffff:
@@ -44,20 +41,20 @@ def hash_txid(json_data):
     txid = ""
     tx_data = json.loads(json_data)
     txid += struct.pack('<I', tx_data['version']).hex()
-    txid += compact_size(len(tx_data['vin'])).hex()
+    txid += compact(len(tx_data['vin'])).hex()
 
     for vin in tx_data['vin']:
         txid += ''.join(reversed([vin['txid'][i:i+2] for i in range(0, len(vin['txid']), 2)]))
         txid += struct.pack('<I', vin['vout']).hex()
-        txid += compact_size(len(vin['scriptsig'])//2).hex()
+        txid += compact(len(vin['scriptsig'])//2).hex()
         txid += vin['scriptsig']
         txid += struct.pack('<I', vin['sequence']).hex()
         
-    txid += compact_size(len(tx_data['vout'])).hex()
+    txid += compact(len(tx_data['vout'])).hex()
     
     for vout in tx_data['vout']:
         txid += struct.pack('<Q', vout['value']).hex()
-        txid += compact_size(len(vout['scriptpubkey'])//2).hex()
+        txid += compact(len(vout['scriptpubkey'])//2).hex()
         txid += vout['scriptpubkey']
     txid += struct.pack('<I', int(tx_data['locktime'])).hex()
     txid_hash = hash256(bytes.fromhex(txid))
@@ -66,10 +63,7 @@ def hash_txid(json_data):
 
 
 def txidlist_calc(folder):
-    # Get all JSON files from the folder
     json_files = [f for f in os.listdir(folder) if f.endswith('.json')]
-
-    # Read JSON data from each file and calculate hashed txids
     hashed_txids = []
     for json_file in json_files:
         with open(os.path.join(folder, json_file), 'r') as file:
@@ -77,7 +71,6 @@ def txidlist_calc(folder):
             hashed_txid = hash_txid(json_data)
             hashed_txids.append(hashed_txid)
     
-    # Return the list of hashed txids
     return hashed_txids
 
 def blockheader(txidlst):
@@ -91,12 +84,10 @@ def blockheader(txidlst):
     target_hexstr = '%064x' % (mant * (1<<(8*(exp - 3))))
     target_str = bytes.fromhex(target_hexstr)
     nonce = 0
-    # header = bytes.fromhex(ver)
     while nonce < 0x100000000:
         header = bytes.fromhex(ver) + bytes.fromhex(prevblock)[::-1] +\
             bytes.fromhex(merkleroot)[::-1] + struct.pack("<LLL", int(hex(int(time.time())),16), target_bits, nonce)
         hash = hashlib.sha256(hashlib.sha256(header).digest()).digest()
-        # print(nonce, (hash[::-1]).hex())
         if hash[::-1] < target_str:
             return header.hex()
         nonce += 1
@@ -112,13 +103,13 @@ def txid_p2wpkh(json_data):
     for vin in tx_data['vin']:
         txid += ''.join(reversed([vin['txid'][i:i+2] for i in range(0, len(vin['txid']), 2)]))
         txid += struct.pack('<I', vin['vout']).hex()
-        txid += compact_size(len(vin['scriptsig'])//2).hex()
+        txid += compact(len(vin['scriptsig'])//2).hex()
         txid += struct.pack('<I', vin['sequence']).hex()     
-    txid += compact_size(len(tx_data['vout'])).hex()
+    txid += compact(len(tx_data['vout'])).hex()
     
     for vout in tx_data['vout']:
         txid += struct.pack('<Q', vout['value']).hex()
-        txid += compact_size(len(vout['scriptpubkey'])//2).hex()
+        txid += compact(len(vout['scriptpubkey'])//2).hex()
         txid += vout['scriptpubkey']
     witness = tx_data["vin"][0]["witness"]
     signature = witness[0]
@@ -140,20 +131,20 @@ def wtxid_p2wpkh(json_data):
     for vin in tx_data['vin']:
         wtx += ''.join(reversed([vin['txid'][i:i+2] for i in range(0, len(vin['txid']), 2)]))
         wtx += struct.pack('<I', vin['vout']).hex()
-        wtx += compact_size(len(vin['scriptsig'])//2).hex()
+        wtx += compact(len(vin['scriptsig'])//2).hex()
         wtx += struct.pack('<I', vin['sequence']).hex()     
-    wtx += compact_size(len(tx_data['vout'])).hex()
+    wtx += compact(len(tx_data['vout'])).hex()
     for vout in tx_data['vout']:
         wtx += struct.pack('<Q', vout['value']).hex()
-        wtx += compact_size(len(vout['scriptpubkey'])//2).hex()
+        wtx += compact(len(vout['scriptpubkey'])//2).hex()
         wtx += vout['scriptpubkey'] 
     witness = tx_data["vin"][0]["witness"]
     signature = witness[0]
     pubkey = witness[1]
     wtx += "02"
-    wtx += compact_size(len(signature)//2).hex()
+    wtx += compact(len(signature)//2).hex()
     wtx += signature
-    wtx += compact_size(len(pubkey)//2).hex()
+    wtx += compact(len(pubkey)//2).hex()
     wtx += pubkey
     wtx += struct.pack('<I', int(tx_data['locktime'])).hex()
     wtx_hash = hash256(bytes.fromhex(wtx))
