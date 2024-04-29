@@ -1,3 +1,10 @@
+#---------------------------------------------#
+# Transaction Validation of P2WPKH Scripted   #
+#---------------------------------------------#
+
+
+
+#Importing libraries... 
 import re
 import hashlib
 from Crypto.Hash import SHA256, RIPEMD160
@@ -9,16 +16,21 @@ import shutil
 from ecdsa import BadSignatureError
 
 
+#Function to perform HASH 256...
 def double_sha256(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
+
+#Function to tokenize..
 def tokenize(script):
     return script.split(" ")
 
+#Function to perform HASH 160
 def hash160(data):
     sha256_hash = hashlib.sha256(bytes.fromhex(data)).digest()
     ripemd_hash = RIPEMD160.new(sha256_hash).digest()
     return ripemd_hash.hex()
 
+#Function to convert integer into Compact Size as per Bitcoin's Standard..
 def compact(value):
     if value < 0xfd:
         return bytes([value])
@@ -29,6 +41,7 @@ def compact(value):
     else:
         return b'\xff' + value.to_bytes(8, 'little')
 
+#Function to reconstruct message from Serialized Transaction Data..
 def message_construction(json_data, index):
     tx_data = json.loads(json_data)
     inputs = ""
@@ -67,7 +80,7 @@ def message_construction(json_data, index):
 
 
 
-
+#Functiont to perform OP_CHECKSIG
 def checksig(pubkey, signature, message):
     try:
         CSpubkey = bytes.fromhex(pubkey)
@@ -80,7 +93,7 @@ def checksig(pubkey, signature, message):
     except BadSignatureError:
         return False
 
-
+#Function that performs stacking and OP_CODES..
 def validate_transaction(combined_script, tx_data, index):
     tokens = tokenize(combined_script)
     stack = []
@@ -118,7 +131,7 @@ def validate_transaction(combined_script, tx_data, index):
         i += 1
 
 
-
+#Function that parses unverified JSON files and stores verified JSON files in dest folder..
 def p2wpkh_verifier(folder, dest_folder):
     files = os.listdir(folder)
     os.makedirs(dest_folder, exist_ok=True)
@@ -133,7 +146,7 @@ def p2wpkh_verifier(folder, dest_folder):
                 continue 
         else:
             print(f"{file} is invalid")
-
+#Function that validates P2WPKH Transactions..
 def valid_p2wpkh(tx_data):
     skript = False
     for i, vin in enumerate(tx_data["vin"]):

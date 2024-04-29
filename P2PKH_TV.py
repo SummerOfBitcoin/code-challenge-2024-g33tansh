@@ -1,3 +1,9 @@
+#-------------------------------------------#
+# Transaction Validation of P2PKH Scripted  #
+#-------------------------------------------#
+
+
+#Importing libraries...
 import re
 import hashlib
 from Crypto.Hash import SHA256, RIPEMD160
@@ -8,24 +14,28 @@ import os
 import shutil
 from ecdsa import BadSignatureError
 
+#Function to tokenize..
 def tokenize(script):
     return script.split(" ")
 
+#Function to take hash160..
 def hash160(data):
     sha256_hash = hashlib.sha256(bytes.fromhex(data)).digest()
     ripemd_hash = RIPEMD160.new(sha256_hash).digest()
     return ripemd_hash.hex()
 
-def compact(value):
-    if value < 0xfd:
-        return bytes([value])
-    elif value <= 0xffff:
-        return b'\xfd' + value.to_bytes(2, 'little')
-    elif value <= 0xffffffff:
-        return b'\xfe' + value.to_bytes(4, 'little')
+#Function to convert integer to compact size as per Bitcoin's standards
+def compact(val):
+    if val < 0xfd:
+        return bytes([val])
+    elif val <= 0xffff:
+        return b'\xfd' + val.to_bytes(2, 'little')
+    elif val <= 0xffffffff:
+        return b'\xfe' + val.to_bytes(4, 'little')
     else:
-        return b'\xff' + value.to_bytes(8, 'little')
-
+        return b'\xff' + val.to_bytes(8, 'little')
+    
+#Functiont to reconstruct message by hashing Serialized Transaction data..
 def message_construction(json_data, index):
     
     tx_data = json.loads(json_data)
@@ -59,20 +69,20 @@ def message_construction(json_data, index):
 
     return message
 
-
+#Function to perform OP_CHECKSIG..
 def checksig(pubkey, signature, message):
     try:
         CSpubkey = bytes.fromhex(pubkey)
         CSsignature = bytes.fromhex(signature[:-2])
         CSmessage = bytes.fromhex(message.hex())
-        
+    
         verik = ecdsa.VerifyingKey.from_string(CSpubkey, curve=ecdsa.SECP256k1)
         isok = verik.verify_digest(CSsignature, CSmessage, sigdecode=ecdsa.util.sigdecode_der)
         return isok
     except BadSignatureError:
         return False
 
-
+#Function that peforms stacking and OP_CODES..
 def validate_transaction(combined_script, tx_data, index):
     tokens = tokenize(combined_script)
     stack = []
@@ -110,7 +120,7 @@ def validate_transaction(combined_script, tx_data, index):
         i += 1
 
 
-
+#Function to parse files from a folder and verify them into a new folder..
 def p2pkh_verifier(folder, dest_folder):
     files = os.listdir(folder)
     os.makedirs(dest_folder, exist_ok=True)
@@ -122,13 +132,13 @@ def p2pkh_verifier(folder, dest_folder):
             shutil.copyfile(os.path.join(folder, file), os.path.join(dest_folder, file))
         else:
             print(f"{file} is invalid")
-
+#To validate P2PKH..
 def valid_p2pkh(tx_data):
     skript = False
     for i, vin in enumerate(tx_data["vin"]):
         pubkeyasm = vin["prevout"]["scriptpubkey_asm"]
         scriptsigasm = vin["scriptsig_asm"]
-        final = scriptsigasm + " " + pubkeyasm
-        skript = validate_transaction(final, json.dumps(tx_data), i)
+        skript1 = scriptsigasm + " " + pubkeyasm
+        skript = validate_transaction(skript1, json.dumps(tx_data), i)
     return skript
 

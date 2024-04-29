@@ -1,14 +1,19 @@
+#---------------------------------------#
+# Mining legacy and segwit transactions #
+#---------------------------------------#
+
+#Importing required libraries..
 import os
 import json
 import struct
 import hashlib
 import time 
 
+#Function to take double sha256...
 def double_sha256(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
-def hash256(data):
-    return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
+#Function to create merkel root from Kenn Shirrif's blog 
 def merkle_root(txids):
     txids = list(txids)
     if len(txids) == 1:
@@ -26,6 +31,7 @@ def hash2(a, b):
     h = hashlib.sha256(hashlib.sha256(a1+b1).digest()).digest()
     return h[::-1].hex()
 
+#Function to encode integers into compact size as per Bitcoin's standards
 def compact(value):
     if value < 0xfd:
         return bytes([value])
@@ -36,6 +42,7 @@ def compact(value):
     else:
         return b'\xff' + value.to_bytes(8, 'little')
 
+#Functiont to create Legacy TXIDs
 def hash_txid(json_data):
 
     txid = ""
@@ -57,11 +64,11 @@ def hash_txid(json_data):
         txid += compact(len(vout['scriptpubkey'])//2).hex()
         txid += vout['scriptpubkey']
     txid += struct.pack('<I', int(tx_data['locktime'])).hex()
-    txid_hash = hash256(bytes.fromhex(txid))
+    txid_hash = double_sha256(bytes.fromhex(txid))
     return txid_hash[::-1].hex()
 
 
-
+#Function to calculate TXIDs over a folder..
 def txidlist_calc(folder):
     json_files = [f for f in os.listdir(folder) if f.endswith('.json')]
     hashed_txids = []
@@ -73,6 +80,7 @@ def txidlist_calc(folder):
     
     return hashed_txids
 
+#Function to create blockheader..
 def blockheader(txidlst):
     ver = "00000020"
     prevblock = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -92,6 +100,7 @@ def blockheader(txidlst):
             return header.hex()
         nonce += 1
 
+#Fucntion to find TXIDs of P2WPKH Transactions
 def txid_p2wpkh(json_data):
     tx_data = json.loads(json_data)
 
@@ -116,11 +125,11 @@ def txid_p2wpkh(json_data):
     pubkey = witness[1]
     txid += signature + pubkey
     txid += struct.pack('<I', int(tx_data['locktime'])).hex()
-    txid_hash = hash256(bytes.fromhex(txid))
+    txid_hash = double_sha256(bytes.fromhex(txid))
     return txid_hash[::-1].hex()
 
 
-
+#Function to create WXTIDs of P2WPKH Transactions..
 def wtxid_p2wpkh(json_data): 
     tx_data = json.loads(json_data)
     wtx = ""
@@ -147,30 +156,29 @@ def wtxid_p2wpkh(json_data):
     wtx += compact(len(pubkey)//2).hex()
     wtx += pubkey
     wtx += struct.pack('<I', int(tx_data['locktime'])).hex()
-    wtx_hash = hash256(bytes.fromhex(wtx))
+    wtx_hash = double_sha256(bytes.fromhex(wtx))
     return wtx_hash[::-1].hex()
 
 
 
-
+#Function to create Coinbase Transaction..
 def koinbase(folder):
     witness_lists = wtxid_list(folder)
     witness_hash = bytes.fromhex(merkle_root(witness_lists))
     witness_hash = witness_hash[::-1].hex()
     coinbase = ""
-    coinbase += "01000000" # Version
-    coinbase += "00" # Marker
-    coinbase += "01" # Flag
-    coinbase += "01" # Input Count
-    coinbase += (b'\x00'*32).hex() # TXID
-    coinbase += "ffffffff" # VOUT
+    coinbase += "01000000" 
+    coinbase += "00" 
+    coinbase += "01" 
+    coinbase += "01" 
+    coinbase += (b'\x00'*32).hex() 
+    coinbase += "ffffffff"
     coinbase += "1d"
     coinbase += "03000000184d696e656420627920416e74506f6f6c373946205b8160a4"
     coinbase += "ffffffff"
     coinbase += "02"
     witkit = witness_hash + "0000000000000000000000000000000000000000000000000000000000000000" 
-    witness_commitment = hash256(bytes.fromhex(witkit)).hex()
-
+    witness_commitment = double_sha256(bytes.fromhex(witkit)).hex()
     coinbase += "f595814a00000000" + "19" + "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
     coinbase += "0000000000000000" + "26" + f"6a24aa21a9ed{witness_commitment}" 
     coinbase += "01" + "20" + "0000000000000000000000000000000000000000000000000000000000000000"
@@ -178,7 +186,7 @@ def koinbase(folder):
 
     return coinbase
 
-    
+#Function that creates output.txt for Autograder 
 def make_output(blockheader, coinbase, txidlist):
     with open('output.txt', 'a') as file:
         file.write(blockheader)
@@ -189,7 +197,7 @@ def make_output(blockheader, coinbase, txidlist):
             file.write("\n"+txid)
         
 
-
+#Function to parse json files...
 def wtxid_list(folder):
     wtxid = ["0000000000000000000000000000000000000000000000000000000000000000"] 
     files = os.listdir(folder)

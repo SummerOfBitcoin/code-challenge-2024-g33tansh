@@ -1,38 +1,47 @@
+#------------------------------------------#
+# Filtering P2PKH and P2WPKH Transacations # 
+# from mempool                             #
+#------------------------------------------#
+
+
+#Importing libraries..
 import os
 import json
 from shutil import copyfile
 
-def filp2pkh(in_folder, out_folder):
-    os.makedirs(out_folder, exist_ok=True)
 
-    for file in os.listdir(in_folder):
+#Function that filters out P2PKH json files from mempool
+def filp2pkh(inf, outf):
+    os.makedirs(outf, exist_ok=True)
+
+    for file in os.listdir(inf):
         if file.endswith(".json"):
-            in_file_path = os.path.join(in_folder, file)
-            out_file_path = os.path.join(out_folder, file)
+            in_path = os.path.join(inf, file)
+            out_path = os.path.join(outf, file)
 
-            with open(in_file_path, "r") as in_file:
+            with open(in_path, "r") as in_file:
                 data = json.load(in_file)
 
                 all_p2pkh = all(vin["prevout"]["scriptpubkey_type"] == "p2pkh" for vin in data["vin"])
 
                 if all_p2pkh:
-                    copyfile(in_file_path, out_file_path)
+                    copyfile(in_path, out_path)
 
+#Function to filter out P2WPKH transactions from mempool 
+def filp2wpkh(inf, outf):
+    os.makedirs(outf, exist_ok=True)
 
-def filp2wpkh(in_folder, out_folder):
-    os.makedirs(out_folder, exist_ok=True)
-
-    for file in os.listdir(in_folder):
+    for file in os.listdir(inf):
         if file.endswith(".json"):
-            in_file_path = os.path.join(in_folder, file)
-            out_file_path = os.path.join(out_folder, file)
+            in_path = os.path.join(inf, file)
+            out_path = os.path.join(outf, file)
 
-            with open(in_file_path, "r") as in_file:
+            with open(in_path, "r") as in_file:
                 data = json.load(in_file)
 
-                any_p2wpkh = any(vin["prevout"]["scriptpubkey_type"] == "v0_p2wpkh" for vin in data["vin"])
+                p2wpkh = any(vin["prevout"]["scriptpubkey_type"] == "v0_p2wpkh" for vin in data["vin"])
                 single_input = len(data.get("vin", [])) == 1
 
-                if any_p2wpkh and single_input:
-                    copyfile(in_file_path, out_file_path)
+                if p2wpkh and single_input:
+                    copyfile(in_path, out_path)
 
