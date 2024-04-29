@@ -11,7 +11,7 @@ import hashlib
 import time 
 
 #Function to perform double SHA256..
-def sha256(data):
+def HASH256(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
@@ -24,9 +24,9 @@ def merkle(txids):
         txids.append(txids[-1])
 
     #Hash pairs of txids iteratively to calculate the Merkle root
-    hashes = [sha256(bytes.fromhex(txid)) for txid in txids]
+    hashes = [HASH256(bytes.fromhex(txid)) for txid in txids]
     while len(hashes) > 1:
-        hashes = [sha256(hashes[i] + hashes[i + 1]) for i in range(0, len(hashes), 2)]
+        hashes = [HASH256(hashes[i] + hashes[i + 1]) for i in range(0, len(hashes), 2)]
 
     return hashes[0].hex()
 
@@ -60,7 +60,7 @@ def LegTxid(json_data):
         txid += encode_compact(len(vout['scriptpubkey'])//2).hex()
         txid += vout['scriptpubkey']
     txid += struct.pack('<I', int(tx_data['locktime'])).hex()
-    txid_hash = sha256(bytes.fromhex(txid))
+    txid_hash = HASH256(bytes.fromhex(txid))
     return txid_hash[::-1].hex()
 
 #Function to create TXID List by parsing Verified Transactions..
@@ -117,7 +117,7 @@ def SegTxid(json_data):
     pubkey = witness[1]
     txid += signature + pubkey
     txid += struct.pack('<I', int(tx_data['locktime'])).hex()
-    txid_hash = sha256(bytes.fromhex(txid))
+    txid_hash = HASH256(bytes.fromhex(txid))
     return txid_hash[::-1].hex()
 
 
@@ -148,7 +148,7 @@ def wSegTxid(json_data):
     wtx += encode_compact(len(pubkey)//2).hex()
     wtx += pubkey
     wtx += struct.pack('<I', int(tx_data['locktime'])).hex()
-    wtx_hash = sha256(bytes.fromhex(wtx))
+    wtx_hash = HASH256(bytes.fromhex(wtx))
     return wtx_hash[::-1].hex()
 
 #Function to create coinbase transaction.. Exemplar data taken from learnmeabitcoin.com
@@ -168,7 +168,7 @@ def koinbase(folder):
     coinbase += "ffffffff"
     coinbase += "02"
     witkit = witness_hash + "0000000000000000000000000000000000000000000000000000000000000000" 
-    witness_commitment = sha256(bytes.fromhex(witkit)).hex()
+    witness_commitment = HASH256(bytes.fromhex(witkit)).hex()
     coinbase += "f595814a00000000" + "19" + "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"
     coinbase += "0000000000000000" + "26" + f"6a24aa21a9ed{witness_commitment}" 
     coinbase += "01" + "20" + "0000000000000000000000000000000000000000000000000000000000000000"

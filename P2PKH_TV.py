@@ -12,7 +12,7 @@ import json
 import os
 import shutil
 from ecdsa import BadSignatureError
-from mine import double_sha256
+from mine import HASH256 as double_sha256
 
 #Tokenize function to create tokens..
 def tokenize(script):
