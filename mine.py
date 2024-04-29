@@ -15,18 +15,20 @@ def HASH256(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 #Function to create Merkle Root
-def merkle(txids):
+def merkleR(txids):
     txids = list(txids)
     if len(txids) == 1:
         return txids[0]
     newtxids = []
+    # Process pairs. For odd length, the last is skipped
     for i in range(0, len(txids)-1, 2):
         newtxids.append(hash2(txids[i], txids[i+1]))
     if len(txids) % 2 == 1: # odd, hash last item twice
         newtxids.append(hash2(txids[-1], txids[-1]))
-    return merkle(newtxids)
+    return merkleR(newtxids)
 
 def hash2(a, b):
+    # Reverse inputs before and after hashing
     a1 = bytes.fromhex(a)[::-1]
     b1 = bytes.fromhex(b)[::-1]
     h = hashlib.sha256(hashlib.sha256(a1+b1).digest()).digest()
@@ -80,7 +82,7 @@ def blockheader(txidlst):
     version = "00000020"
     prevblock = "0000000000000000000000000000000000000000000000000000000000000000"
     txidlst = ["0000000000000000000000000000000000000000000000000000000000000000"] + txidlst
-    merkleroot = merkle(txidlst)
+    merkleroot = merkleR(txidlst)
     target_bits = 0x1f00ffff
     exp = target_bits >> 24
     mant = target_bits & 0xffffff
@@ -155,7 +157,7 @@ def wSegTxid(json_data):
 #Function to create coinbase transaction.. Exemplar data taken from learnmeabitcoin.com
 def koinbase(folder):
     witness_lists = wtxid_list(folder)
-    witness_hash = bytes.fromhex(merkle(witness_lists))
+    witness_hash = bytes.fromhex(merkleR(witness_lists))
     witness_hash = witness_hash[::-1].hex()
     coinbase = ""
     coinbase += "01000000" # Version
