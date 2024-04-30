@@ -14,6 +14,7 @@ def double_sha256(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 #Function to create merkel root from Kenn Shirrif's blog 
+#Reference: 
 def merkle_root(txids):
     txids = list(txids)
     if len(txids) == 1:
@@ -26,10 +27,10 @@ def merkle_root(txids):
     return merkle_root(newtxids)
 
 def hash2(a, b):
-    a1 = bytes.fromhex(a)[::-1]
-    b1 = bytes.fromhex(b)[::-1]
-    h = hashlib.sha256(hashlib.sha256(a1+b1).digest()).digest()
-    return h[::-1].hex()
+    ans = bytes.fromhex(a)[::-1]
+    sna = bytes.fromhex(b)[::-1]
+    hsa = double_sha256(ans + sna)
+    return hsa[::-1].hex()
 
 #Function to encode integers into compact size as per Bitcoin's standards
 def compact(value):
